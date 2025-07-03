@@ -1,115 +1,125 @@
-# 🚗 Clio2.0 – Intelligent and Modular Embedded System for OBD-II Vehicles
+# 🚗 Clio2.0 – Modular Embedded Driving System for OBD-II Vehicles
 
-**Clio2.0** is an **open hardware/software embedded platform** designed to enhance the driving experience, particularly for motorsport or rally use.  
-Based on an **ESP32 + Raspberry Pi 4** architecture, it offers features such as **engine telemetry**, **GPS visualization**, **timing system**, **dynamic LED display**, **audio playback**, and a **touchscreen user interface**.
+**Clio2.0** is an **open-source, modular embedded system** designed to enhance the driving experience—especially in motorsport or rally contexts—by combining real-time engine telemetry, GPS-based timing, dynamic LED feedback, media control, and touchscreen interaction.
 
-> 🔧 Originally developed for a Clio 2 Phase 2, the system is **fully generic and adaptable** to any vehicle equipped with an OBD-II port.
+> 💡 Originally developed for a Clio 2 Phase 2, Clio2.0 is **vehicle-agnostic** and works with any OBD-II compatible car.
 
 ---
 
-## 🧩 Hardware Architecture
+## 🧩 Architecture Overview
 
-| Component        | Main Role |
-|------------------|-----------|
-| ESP32            | OBD telemetry, shifting LEDs, GPS zones, engine data display |
-| Raspberry Pi 4   | UI, GPS map, audio, ESP communication, Waydroid/Waze |
-| GPS GT-07 (x2)   | 1 for ESP (zones & timing), 1 for RPi (map/navigation) |
-| WS2812 LEDs      | Shifting LEDs (RPM indicator) |
-| ESP32 Display    | Turbo pressure, temp, speed, and PID visualization |
-| HDMI Touchscreen | Main interface (map, music, timing, alerts) |
-| 4×4 Keypad       | Mode selection and GPS zone registration |
-| Car Radio        | Audio output via Raspberry Pi's jack |
-| ON/OFF Button    | Physical ESP32 power cut-off |
+| Component         | Role                                                                 |
+|------------------|----------------------------------------------------------------------|
+| **ESP32**         | OBD-II telemetry, driving mode control, LED shifting bar, GPS chrono/zones |
+| **Raspberry Pi 4**| UI interface, GPS navigation, media playback, OTA updates, plugin host |
+| **GPS Modules**   | GT-07 x2 (1 ESP32 for zones/chrono, 1 RPi for mapping/Waze)         |
+| **WS2812 LEDs**   | Real-time engine RPM shift light                                     |
+| **ESP32 OLED/LCD**| Displays turbo, RPM, temp, etc.                                      |
+| **HDMI Touchscreen**| Main UI for map, audio, timers, alerts                          |
+| **4x4 Keypad**    | Driving mode selection, point setting                                |
+| **Audio Output**  | Via 3.5mm jack to stock head unit                                    |
+| **ON/OFF Button** | Physically cuts power to ESP32                                       |
 
 ---
 
 ## ⚙️ Features
 
-### 🎮 Driving Modes (controlled by ESP32)
-- **Normal**: Engine data, LEDs, static map
-- **Race**: GPS timer, zone alerts, dynamic display
-- **Setup**: Zone/PID configuration, LED test
-- **OFF**: System shutdown via hardware switch
+### 🎮 Driving Modes
+- **Normal** – Telemetry & shifting LEDs
+- **Race** – Chrono, GPS alerts, zone detection
+- **Setup** – Zone config, PID testing, LED debug
+- **Off** – Fully powered down
 
-### 📡 Telemetry & Engine Data
-- OBD data via UART (RPM, turbo, speed, etc.)
-- Displayed on ESP32 screen + WS2812 LEDs
-- Modular OBD command system (Command/Repository pattern)
+### 📡 OBD-II Telemetry
+- UART-based OBD-II PID reading
+- PIDs: RPM, boost pressure, coolant, speed, etc.
+- Real-time LED feedback (shifting)
+- Displayed on both ESP screen and Pi UI
+- Structured via Command/Repository pattern for extensibility
 
-### 🛰️ GPS System (GT-07 modules)
-- Timing between GPS waypoints
-- Auto zone entry detection
-- GPS map on RPi + Waze via Waydroid container
-- Two independent modules (ESP & RPi)
+### 🛰️ GPS Integration
+- ESP32 handles timing between 2 points & geo-zones
+- RPi handles map, Waze (via Waydroid), visualization
+- Zones activated only in Race Mode
+- Always-on map mode on RPi for orientation
 
-### 🎧 Audio & UI
-- Python GUI (Tkinter or PyQt/PyGame)
-- Built-in equalizer and music player
-- Audio via 3.5mm jack to car stereo
-- Sound alerts (zones, engine errors, timer)
+### 🔄 OTA & Config
+- OTA updates from Pi to ESP using `esptool`
+- Persistent config via `LittleFS` (ESP) and YAML/JSON (RPi)
+- Serial bi-directional communication ESP <--> RPi
 
-### 🔄 OTA & Config Management
-- OTA updates for ESP32 via RPi
-- Persistent zone/config storage using LittleFS
-- Serial communication between ESP32 ↔ RPi
+### 🎵 Audio Control
+- Audio output via RPi jack → car audio system
+- Custom Python UI: player, equalizer, alerts
+- Alerts triggered by zone entry, errors, timers
+
+### 💻 Plugin System
+#### ESP32
+- Hook-based (C++)
+- Handlers: `onOBDData()`, `onGPSUpdate()`, etc.
+
+#### RPi
+- Dynamic module loading in Python
+- Hooks: `on_mode_change()`, `on_zone_enter()`, `on_obd_data()`
+- Enables dashcam, mobile sync, performance logging, etc.
 
 ---
 
-## 🔌 Software Stack
+## 🛠️ Installation Plan
+
+| Element       | Location                    |
+|---------------|-----------------------------|
+| ESP32         | Glovebox / hidden enclosure |
+| RPi 4         | Behind/instead of radio     |
+| LED Strip     | Around cluster / dashboard  |
+| ESP Screen    | Driver zone / dashboard     |
+| HDMI Display  | Central dash (mounted)      |
+| Keypad        | Console or dash             |
+| GPS           | Dashboard or windshield     |
+
+---
+
+## 🔮 Future Extensions
+
+- Dashcam & rear camera
+- Cloud sync + mobile app
+- Voice commands
+- IMU sensors
+- Advanced diagnostics
+- Route logger & performance analyzer
+
+---
+
+## 🧪 Dependencies
 
 ### ESP32
 - `ESP32-Arduino`
-- `OBD2UART`, `NeoPixel`, `TinyGPS++`, `LittleFS`, `SerialCommand`
+- `OBD2UART`, `NeoPixel`, `TinyGPS++`, `LittleFS`
 
 ### Raspberry Pi (NixOS)
-- Weston (Wayland compositor)
-- Waydroid (Android container for Waze)
-- Python 3.x + GUI libs (Tkinter / PyQt / PyGame)
-- Serial communication (PySerial)
-- OTA tools (`esptool`, etc.)
-
----
-
-## 🛠️ Installation & Physical Integration
-
-### Overview
-- **ESP32**: glovebox or central console
-- **RPi**: behind or in place of the car radio
-- **LEDs**: around the dashboard cluster
-- **ESP screen**: driver's side display
-- **Keypad**: dashboard or center console
-- **Touchscreen**: integrated or mounted to dashboard
-- **GPS Modules**: dashboard or windshield mount
-
----
-
-## 🧪 Future Extensions
-
-- Dashcam / rear-view camera integration
-- Companion mobile app
-- Cloud sync (logs, performance tracking)
-- IMU integration (accelerometer, gyroscope)
-- Advanced engine diagnostics
-- Trip logging and post-race analysis
+- Weston compositor
+- Waydroid (Android for Waze)
+- Python 3.x, `PySerial`, `PyGame`, `PyQt` or `Tkinter`
+- OTA Tools (`esptool`)
+- Dynamic plugin loader
 
 ---
 
 ## 📜 License
 
-Open-source project under the MIT License.  
-Forks, contributions, and community feedback are welcome.
+MIT License – free to use, modify, and distribute.  
+Community contributions welcome!
 
 ---
 
-## 🧠 Author Notes
+## 🧠 About
 
-> Clio2.0 is a personal project built for learning, embedded experimentation, and enhanced driving performance.  
-> Designed to be **portable, extensible, and maintainable**, it serves as a solid foundation for broader automotive electronics projects.
+Clio2.0 is an educational and experimental embedded platform designed for vehicle telemetry, navigation, and driver assistance.  
+Built to be **portable, scalable, and modular**—a base for any custom in-car system project.
 
 ---
 
-## 💬 Contact
+## 📬 Contact
 
-For questions or contributions:  
-- **Instagram**: @mathisdlg  
-- **Discord**: mathisdlg
+- Instagram: [@mathisdlg](https://instagram.com/mathisdlg)
+- Discord: `mathisdlg`
